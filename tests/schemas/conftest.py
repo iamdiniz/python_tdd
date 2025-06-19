@@ -3,7 +3,8 @@ from uuid import UUID
 import pytest
 from store.db.mongo import db_client
 from store.schemas.product import ProductIn, ProductUpdate
-from tests.schemas.factories import product_data
+from tests.schemas.factories import product_data, products_data
+from store.usecases.product import product_usecase
 
 
 @pytest.fixture(scope="session")
@@ -13,7 +14,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture()
+@pytest.fixture
 def mongo_client():
     return db_client.get()
 
@@ -34,11 +35,26 @@ def product_id() -> UUID:
     return UUID("64e6b7c46a4e4f1a8d2d3b9c")
 
 
-@pytest.fixture()
+@pytest.fixture
 def product_in(product_id):
     return ProductIn(**product_data(), id=product_id)
 
 
-@pytest.fixture()
+@pytest.fixture
 def product_up(product_id):
     return ProductUpdate(**product_data(), id=product_id)
+
+
+@pytest.fixture
+async def product_inserted():
+    return await product_usecase.create(body=product_in)
+
+
+@pytest.fixture
+def products_in():
+    return [ProductIn(**product) for product in products_data()]
+
+
+@pytest.fixture
+async def products_inserted(products_in):
+    return [await product_usecase.create(body=product_in) for product_in in products_in]
